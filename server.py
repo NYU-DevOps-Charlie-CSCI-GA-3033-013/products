@@ -127,7 +127,7 @@ def is_valid(data):
         app.logger.error('Missing parameter error: %s', err)
     return valid
 
-PRODUCTS_DATA_SOURCE_FILE = 'sample_products.csv'
+PRODUCTS_DATA_SOURCE_FILE = 'sampleSchema_products.csv'
 def get_product_data():
     prod_data = {}
     with open(PRODUCTS_DATA_SOURCE_FILE) as csvfile:
