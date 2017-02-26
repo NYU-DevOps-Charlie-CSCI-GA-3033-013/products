@@ -21,7 +21,7 @@ class TestProductServer(unittest.TestCase):
     def setUp(self):
         server.app.debug = True
         self.app = server.app.test_client()
-        server.products = { 1: {'id': 1, 'name': 'TV', 'category': 'entertainment'}, 2: {'id': 2, 'name': 'Blender', 'category': 'appliances'} }
+        server.products = { 1: {'id': 1, 'name': 'TV', 'category': 'entertainment', 'discontinued': True}, 2: {'id': 2, 'name': 'Blender', 'category': 'appliances', 'discontinued': False} }   
 
     def test_index(self):
         resp = self.app.get('/')
@@ -41,16 +41,22 @@ class TestProductServer(unittest.TestCase):
         data = json.loads(resp.data)
         self.assertTrue (data['name'] == 'Blender')
 
+    def test_query_product_list(self):
+        self.setup_test_by_attribute('category', 'entertainment')
+        self.setup_test_by_attribute('discontinued', True)    
+
     def test_create_product(self):
-        # save the current number of products for later comparrison
+        # save the current number of products for later comparison
         product_count = self.get_product_count()
         # add a new product
-        new_product = {'name': 'sammy', 'category': 'snake'}
+        new_product = {'name': 'toaster', 'category': 'kitchen appliances'}
         data = json.dumps(new_product)
         resp = self.app.post('/products', data=data, content_type='application/json')
         self.assertTrue( resp.status_code == HTTP_201_CREATED )
         new_json = json.loads(resp.data)
-        self.assertTrue (new_json['name'] == 'sammy')
+        self.assertTrue (new_json['name'] == 'toaster')
+        # Check default value of 'discontinued' is 'False'
+        self.assertTrue (new_json['discontinued'] == False)
         # check that count has gone up and includes sammy
         resp = self.app.get('/products')
         # print 'resp_data(2): ' + resp.data
@@ -60,12 +66,19 @@ class TestProductServer(unittest.TestCase):
         self.assertTrue( new_json in data )
 
     def test_update_product(self):
-        new_Blender = {'name': 'Blender', 'category': 'tabby'}
+        new_Blender = {'name': 'Blender', 'category': 'home appliances', 'discontinued': True}
         data = json.dumps(new_Blender)
         resp = self.app.put('/products/2', data=data, content_type='application/json')
         self.assertTrue( resp.status_code == HTTP_200_OK )
         new_json = json.loads(resp.data)
-        self.assertTrue (new_json['category'] == 'tabby')
+        self.assertTrue (new_json['category']       == 'home appliances')
+        self.assertTrue (new_json['discontinued']   == True)
+    
+    def test_discontinue_produce(self):
+        resp = self.app.put('/products/2/discontinue')
+        self.assertTrue( resp.status_code == HTTP_200_OK )
+        new_json = json.loads(resp.data)
+        self.assertTrue (new_json['discontinued']   == True)
 
     def test_update_product_with_no_name(self):
         new_product = {'category': 'entertainment'}
@@ -93,15 +106,6 @@ class TestProductServer(unittest.TestCase):
         resp = self.app.get('/products/5')
         self.assertTrue( resp.status_code == HTTP_404_NOT_FOUND )
 
-    def test_query_product_list(self):
-        resp = self.app.get('/products', query_string='category=entertainment')
-        self.assertTrue( resp.status_code == HTTP_200_OK )
-        self.assertTrue( len(resp.data) > 0 )
-        data = json.loads(resp.data)
-        query_item = data[0]
-        self.assertTrue(query_item['category'] == 'entertainment')
-
-
 ######################################################################
 # Utility functions
 ######################################################################
@@ -114,7 +118,14 @@ class TestProductServer(unittest.TestCase):
         data = json.loads(resp.data)
         return len(data)
 
-
+    def setup_test_by_attribute(self, attr_name, attr_value):
+        resp = self.app.get('/products', \
+                            query_string='attr_name=attr_value'.format(attr_name=attr_name, attr_value=attr_value))
+        self.assertTrue( resp.status_code == HTTP_200_OK )
+        self.assertTrue( len(resp.data) > 0 )
+        data = json.loads(resp.data)
+        query_item = data[0]
+        self.assertTrue(query_item[attr_name] == attr_value) 
 ######################################################################
 #   M A I N
 ######################################################################
