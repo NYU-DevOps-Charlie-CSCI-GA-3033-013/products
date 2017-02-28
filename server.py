@@ -10,12 +10,12 @@ from flask import Flask, Response, jsonify, request, json
 app = Flask(__name__)
 
 # Status Codes
-HTTP_200_OK = 200
-HTTP_201_CREATED = 201
-HTTP_204_NO_CONTENT = 204
-HTTP_400_BAD_REQUEST = 400
-HTTP_404_NOT_FOUND = 404
-HTTP_409_CONFLICT = 409
+HTTP_200_OK             = 200
+HTTP_201_CREATED        = 201
+HTTP_204_NO_CONTENT     = 204
+HTTP_400_BAD_REQUEST    = 400
+HTTP_404_NOT_FOUND      = 404
+HTTP_409_CONFLICT       = 409
 
 # Lock for thread-safe counter increment
 lock = Lock()
@@ -36,15 +36,17 @@ def index():
 ######################################################################
 @app.route('/products', methods=['GET'])
 def list_products():
-    results = products.values()
-    category = request.args.get('category')
-    if category:
-        results = []
-        for key, value in products.iteritems():
-            if value['category'] == category:
-                results.append(products[key])
-
+    category        = request.args.get('category')
+    discontinued    = str2bool(request.args.get('discontinued'))
+    results     = []
+    for key, value in products.iteritems():
+        if matchesClause(category,      value['category']) and \
+           matchesClause(discontinued,  value['discontinued']):
+             results.append(products[key])
     return reply(results, HTTP_200_OK)
+
+def matchesClause(clause_value, item_value):
+    return clause_value is None or clause_value == item_value 
 
 ######################################################################
 # RETRIEVE A product
@@ -68,7 +70,7 @@ def create_products():
     payload = request.get_json()
     if is_valid(payload):
         id = next_index()
-        products[id] = {'id': id, 'name': payload['name'], 'category': payload['category']}
+        insertUpdateProdEntry(id, products, payload)
         message = products[id]
         rc = HTTP_201_CREATED
     else:
@@ -80,12 +82,16 @@ def create_products():
 ######################################################################
 # UPDATE AN EXISTING product
 ######################################################################
+######################################################################
+# UPDATE AN EXISTING product - Discontinue action
+######################################################################
+
 @app.route('/products/<int:id>', methods=['PUT'])
 def update_products(id):
     if products.has_key(id):
         payload = request.get_json()
         if is_valid(payload):
-            products[id] = {'id': id, 'name': payload['name'], 'category': payload['category']}
+            insertUpdateProdEntry(id, products, payload)
             message = products[id]
             rc = HTTP_200_OK
         else:
@@ -93,6 +99,18 @@ def update_products(id):
             rc = HTTP_400_BAD_REQUEST
     else:
         message = { 'error' : 'product %s was not found' % id }
+        rc = HTTP_404_NOT_FOUND
+
+    return reply(message, rc)
+
+@app.route('/products/<int:id>/discontinue', methods=['PUT'])
+def discontinue_products(id):
+    if products.has_key(id):
+        products[id]['discontinued']    = True
+        message                         = products[id]
+        rc = HTTP_200_OK
+    else:
+        message                         = { 'error' : 'product %s was not found' % id }
         rc = HTTP_404_NOT_FOUND
 
     return reply(message, rc)
@@ -133,9 +151,16 @@ def get_product_data():
     with open(PRODUCTS_DATA_SOURCE_FILE) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            prod_data[int(row['id'])] = { 'id':int(row['id']), 'name':row['name'], 'category':row['category']   }
+            prod_data[int(row['id'])] = {   'id':int(row['id']), 'name':row['name'], 'category':row['category'], \
+                                            'discontinued': row.get('discontinued', False)   }
     return prod_data
 
+def insertUpdateProdEntry(product_id, products, json_payload):
+    products[product_id] = {'id': product_id, 'name': json_payload['name'], 'category': json_payload['category']}
+    products[product_id]['discontinued'] = json_payload.get('discontinued', False)
+    
+def str2bool(value):
+  return None if value is None else value.lower() in ("yes", "true", "t", "1")
 ######################################################################
 #   M A I N
 ######################################################################
