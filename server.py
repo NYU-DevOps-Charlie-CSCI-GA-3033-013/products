@@ -38,10 +38,12 @@ def index():
 def list_products():
     category        = request.args.get('category')
     discontinued    = str2bool(request.args.get('discontinued'))
+    price           = request.args.get('price')
     results     = []
     for key, value in products.iteritems():
         if matchesClause(category,      value['category']) and \
-           matchesClause(discontinued,  value['discontinued']):
+           matchesClause(discontinued,  value['discontinued']) and \
+           matchesClause(price,         value['price']):
              results.append(products[key])
     return reply(results, HTTP_200_OK)
 
@@ -76,6 +78,33 @@ def create_products():
     else:
         message = { 'error' : 'Data is not valid' }
         rc = HTTP_400_BAD_REQUEST
+
+    return reply(message, rc)
+
+######################################################################
+# QUERY PRODUCT BY PRICE RANGE
+# Takes one integer input, returns all products with price less than
+######################################################################
+@app.route('/products/price/<int:id>', methods=['GET'])
+def query_price(id):
+    results = []
+    for key, value in products.iteritems():
+        price = int(value['price'])
+        if price <= id:
+            results.append(products[key])
+
+    return reply(results, HTTP_200_OK)
+######################################################################
+# GET PRICE OF PRODUCT
+######################################################################
+@app.route('/products/<int:id>/price', methods=['GET'])
+def get_price(id):
+    if products.has_key(id):
+        message                         = products[id]['price']
+        rc = HTTP_200_OK
+    else:
+        message                         = { 'error' : 'product %s was not found' % id }
+        rc = HTTP_404_NOT_FOUND
 
     return reply(message, rc)
 
@@ -140,6 +169,7 @@ def is_valid(data):
     try:
         name = data['name']
         category = data['category']
+        price = data['price']
         valid = True
     except KeyError as err:
         app.logger.error('Missing parameter error: %s', err)
@@ -152,12 +182,13 @@ def get_product_data():
         reader = csv.DictReader(csvfile)
         for row in reader:
             prod_data[int(row['id'])] = {   'id':int(row['id']), 'name':row['name'], 'category':row['category'], \
-                                            'discontinued': row.get('discontinued', False)   }
+                                            'discontinued': row.get('discontinued', False), 'price':int(row['price'])   }
     return prod_data
 
 def insertUpdateProdEntry(product_id, products, json_payload):
     products[product_id] = {'id': product_id, 'name': json_payload['name'], 'category': json_payload['category']}
     products[product_id]['discontinued'] = json_payload.get('discontinued', False)
+    products[product_id]['price'] = json_payload.get('price')
     
 def str2bool(value):
   return None if value is None else value.lower() in ("yes", "true", "t", "1")
