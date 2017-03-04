@@ -38,21 +38,32 @@ def index():
 def list_products():
     category        = request.args.get('category')
     discontinued    = str2bool(request.args.get('discontinued'))
-    minPrice        = request.args.get('minPrice')
-    maxPrice        = request.args.get('maxPrice')
+    min_Price       = request.args.get('minPrice')
+    max_Price       = request.args.get('maxPrice')
     price           = request.args.get('price')
-    results     = []
+    limit           = request.args.get('limit')
+    results         = []
+    count           = 0
+    if (limit is not None and int(limit) < 0):
+        return reply(results, HTTP_400_BAD_REQUEST)
+
     for key, value in products.iteritems():
-        if matchesClause(category,      value['category']) and \
-           matchesClause(discontinued,  value['discontinued']) and \
-           (minPrice is None or int(minPrice) <= int(value['price'])) and \
-           (maxPrice is None or int(maxPrice) >= int(value['price'])) and \
-           (price is None or int(price) == int(value['price'])):
+        if (limit is not None and int(count) == int(limit)):
+            break
+        if matches_clause(category,      value['category']) and \
+           matches_clause(discontinued,  value['discontinued']) and \
+           matches_price(min_Price, max_Price, price, int(value['price'])):
                 results.append(products[key])
+        count += 1
 
     return reply(results, HTTP_200_OK)
 
-def matchesClause(clause_value, item_value):
+def matches_price(min_Price, max_Price, price, value):
+    return ((min_Price is None or int(min_Price) <= value) and \
+           (max_Price is None or int(max_Price) >= value) and \
+           (price is None or int(price) == value))
+
+def matches_clause(clause_value, item_value):
     return clause_value is None or clause_value == item_value 
 
 ######################################################################

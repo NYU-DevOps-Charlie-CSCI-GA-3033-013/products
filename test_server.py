@@ -41,6 +41,12 @@ class TestProductServer(unittest.TestCase):
         self.assertTrue(data[0]['name'] == 'TV')
         self.assertTrue(data[1]['name'] == 'Blender')
 
+    def test_get_product_limit(self):
+        resp = self.app.get('/products?minPrice=99&limit=1')
+        self.assertTrue( resp.status_code == HTTP_200_OK )
+        data = json.loads(resp.data)
+        self.assertTrue( len(data) == 1)
+
     def test_get_product_category(self):
         resp = self.app.get('/products?category=entertainment')
         self.assertTrue( resp.status_code == HTTP_200_OK )
