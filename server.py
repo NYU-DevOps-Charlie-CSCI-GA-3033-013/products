@@ -36,6 +36,7 @@ def index():
 ######################################################################
 @app.route('/products', methods=['GET'])
 def list_products():
+<<<<<<< HEAD
     category        = request.args.get('category')
     discontinued    = str2bool(request.args.get('discontinued'))
     min_price       = request.args.get('min-price')
@@ -69,6 +70,27 @@ def matches_price(min_price, max_price, price, value):
 
 def matches_clause(clause_value, item_value):
     return clause_value is None or clause_value == item_value 
+=======
+	category=request.args.get('category')
+	discontinued = str2bool(request.args.get('discontinued'))
+	search_term=(request.args.get('search')).lower()
+	#print ("Category", category)
+	#print ("discontinued", discontinued)
+	#print ("search_term", search_term)
+	results = []
+	for key, value in products.iteritems():
+		if category is None and discontinued is None and search_term is None:
+			results.append(products[key])
+		elif matchesClause(category, value['category']) \
+			and matchesClause(discontinued, value['discontinued']):
+			results.append(products[key])
+		elif search_term in value['category'].lower() or search_term in value['name'].lower():
+			results.append(products[key])
+	return reply(results, HTTP_200_OK)
+
+def matchesClause(clause_value, item_value):
+    return clause_value is not None and clause_value in item_value 
+>>>>>>> modified code for list_products to search
 
 ######################################################################
 # RETRIEVE A product
