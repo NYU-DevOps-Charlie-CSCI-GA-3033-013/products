@@ -30,7 +30,6 @@ class TestProductServer(unittest.TestCase):
 
     def test_get_product_list(self):
         resp = self.app.get('/products')
-        #print 'resp_data: ' + resp.data
         self.assertTrue( resp.status_code == HTTP_200_OK )
 
         data = json.loads(resp.data)
@@ -63,7 +62,6 @@ class TestProductServer(unittest.TestCase):
 
     def test_get_product(self):
         resp = self.app.get('/products/2')
-        #print 'resp_data: ' + resp.data
         self.assertTrue( resp.status_code == HTTP_200_OK )
         data = json.loads(resp.data)
         self.assertTrue (data['name'] == 'Blender')
@@ -89,7 +87,6 @@ class TestProductServer(unittest.TestCase):
         self.assertTrue (new_json['price'] == 99)
         # check that count has gone up and includes sammy
         resp = self.app.get('/products?limit=' + str(product_count + 1))
-        # print 'resp_data(2): ' + resp.data
         data = json.loads(resp.data)
         self.assertTrue( resp.status_code == HTTP_200_OK )
         self.assertTrue( len(data) == product_count + 1 )

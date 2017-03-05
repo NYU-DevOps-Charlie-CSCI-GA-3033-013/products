@@ -50,7 +50,7 @@ def list_products():
         cutoff = int(limit)
     elif (limit is not None and int(limit) < 0):
         return reply(results, HTTP_400_BAD_REQUEST)
-
+        
     for key, value in products.iteritems():
         if (count == cutoff):
             break
@@ -176,7 +176,7 @@ def get_product_data():
         for row in reader:
             prod_data[int(row['id'])] = {   'id':int(row['id']), 'name':row['name'], 'category':row['category'], \
                                             'discontinued': row.get('discontinued', False), \
-                                            'price': row['price']   }
+                                            'price': int(row['price'])   }
     return prod_data
 
 def insertUpdateProdEntry(product_id, products, json_payload):
