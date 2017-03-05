@@ -38,14 +38,36 @@ def index():
 def list_products():
     category        = request.args.get('category')
     discontinued    = str2bool(request.args.get('discontinued'))
-    results     = []
+    min_price       = request.args.get('min-price')
+    max_price       = request.args.get('max-price')
+    price           = request.args.get('price')
+    limit           = request.args.get('limit')
+    results         = []
+    count           = 0
+    cutoff          = 10
+
+    if (limit is not None and int(limit) >= 0):
+        cutoff = int(limit)
+    elif (limit is not None and int(limit) < 0):
+        return reply(results, HTTP_400_BAD_REQUEST)
+        
     for key, value in products.iteritems():
-        if matchesClause(category,      value['category']) and \
-           matchesClause(discontinued,  value['discontinued']):
-             results.append(products[key])
+        if (count == cutoff):
+            break
+        if matches_clause(category,      value['category']) and \
+           matches_clause(discontinued,  value['discontinued']) and \
+           matches_price(min_price, max_price, price, value['price']):
+                results.append(products[key])
+        count += 1
+
     return reply(results, HTTP_200_OK)
 
-def matchesClause(clause_value, item_value):
+def matches_price(min_price, max_price, price, value):
+    return ((min_price is None or int(min_price) <= value) and \
+           (max_price is None or int(max_price) >= value) and \
+           (price is None or int(price) == value))
+
+def matches_clause(clause_value, item_value):
     return clause_value is None or clause_value == item_value 
 
 ######################################################################
@@ -140,6 +162,7 @@ def is_valid(data):
     try:
         name = data['name']
         category = data['category']
+        price = data['price']
         valid = True
     except KeyError as err:
         app.logger.error('Missing parameter error: %s', err)
@@ -152,12 +175,14 @@ def get_product_data():
         reader = csv.DictReader(csvfile)
         for row in reader:
             prod_data[int(row['id'])] = {   'id':int(row['id']), 'name':row['name'], 'category':row['category'], \
-                                            'discontinued': row.get('discontinued', False)   }
+                                            'discontinued': row.get('discontinued', False), \
+                                            'price': int(row['price'])   }
     return prod_data
 
 def insertUpdateProdEntry(product_id, products, json_payload):
     products[product_id] = {'id': product_id, 'name': json_payload['name'], 'category': json_payload['category']}
     products[product_id]['discontinued'] = json_payload.get('discontinued', False)
+    products[product_id]['price'] = json_payload.get('price')
     
 def str2bool(value):
   return None if value is None else value.lower() in ("yes", "true", "t", "1")
