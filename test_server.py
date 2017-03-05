@@ -21,7 +21,7 @@ class TestProductServer(unittest.TestCase):
     def setUp(self):
         server.app.debug = True
         self.app = server.app.test_client()
-        server.products = { 1: {'id': 1, 'name': 'TV', 'category': 'entertainment', 'discontinued': True, 'price': '999'}, 2: {'id': 2, 'name': 'Blender', 'category': 'appliances', 'discontinued': False, 'price': '99'} }   
+        server.products = { 1: {'id': 1, 'name': 'TV', 'category': 'entertainment', 'discontinued': True, 'price': 999}, 2: {'id': 2, 'name': 'Blender', 'category': 'appliances', 'discontinued': False, 'price': 99} }   
 
     def test_index(self):
         resp = self.app.get('/')
@@ -39,15 +39,15 @@ class TestProductServer(unittest.TestCase):
         self.assertTrue(data[1]['name'] == 'Blender')
 
     def test_get_product_price(self):
-        resp1 = self.app.get('/products?min-price=100')
-        self.assertTrue( resp1.status_code == HTTP_200_OK )
-        data1 = json.loads(resp1.data)
-        self.assertTrue(data1[0]['name'] == 'TV')
+        resp_min_price = self.app.get('/products?min-price=100')
+        self.assertTrue( resp_min_price.status_code == HTTP_200_OK )
+        data_min_price = json.loads(resp_min_price.data)
+        self.assertTrue(data_min_price[0]['name'] == 'TV')
         
-        resp2 = self.app.get('/products?max-price=100')
-        self.assertTrue( resp2.status_code == HTTP_200_OK )
-        data2 = json.loads(resp2.data)
-        self.assertTrue(data2[0]['name'] == 'Blender')
+        resp_max_price = self.app.get('/products?max-price=100')
+        self.assertTrue( resp_max_price.status_code == HTTP_200_OK )
+        data_max_price = json.loads(resp_max_price.data)
+        self.assertTrue(data_max_price[0]['name'] == 'Blender')
 
     def test_get_product_limit(self):
         resp = self.app.get('/products?limit=1')
@@ -71,13 +71,13 @@ class TestProductServer(unittest.TestCase):
     def test_query_product_list(self):
         self.setup_test_by_attribute('category', 'entertainment')
         self.setup_test_by_attribute('discontinued', True)  
-        self.setup_test_by_attribute('price', '999')  
+        self.setup_test_by_attribute('price', 999)  
 
     def test_create_product(self):
         # save the current number of products for later comparison
         product_count = self.get_product_count()
         # add a new product
-        new_product = {'name': 'toaster', 'category': 'kitchen appliances', 'price': '99'}
+        new_product = {'name': 'toaster', 'category': 'kitchen appliances', 'price': 99}
         data = json.dumps(new_product)
         resp = self.app.post('/products', data=data, content_type='application/json')
         self.assertTrue( resp.status_code == HTTP_201_CREATED )
@@ -86,7 +86,7 @@ class TestProductServer(unittest.TestCase):
         # check default value of 'discontinued' is 'False'
         self.assertTrue (new_json['discontinued'] == False)
         # check the price of the product
-        self.assertTrue (new_json['price'] == '99')
+        self.assertTrue (new_json['price'] == 99)
         # check that count has gone up and includes sammy
         resp = self.app.get('/products?limit=' + str(product_count + 1))
         # print 'resp_data(2): ' + resp.data
@@ -96,14 +96,14 @@ class TestProductServer(unittest.TestCase):
         self.assertTrue( new_json in data )
 
     def test_update_product(self):
-        new_Blender = {'name': 'Blender', 'category': 'home appliances', 'discontinued': True, 'price': '99'}
+        new_Blender = {'name': 'Blender', 'category': 'home appliances', 'discontinued': True, 'price': 99}
         data = json.dumps(new_Blender)
         resp = self.app.put('/products/2', data=data, content_type='application/json')
         self.assertTrue( resp.status_code == HTTP_200_OK )
         new_json = json.loads(resp.data)
         self.assertTrue (new_json['category']       == 'home appliances')
         self.assertTrue (new_json['discontinued']   == True)
-        self.assertTrue (new_json['price']          == '99')
+        self.assertTrue (new_json['price']          == 99)
     
     def test_discontinue_produce(self):
         resp = self.app.put('/products/2/discontinue')

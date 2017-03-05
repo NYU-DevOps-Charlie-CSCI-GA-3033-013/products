@@ -44,7 +44,7 @@ def list_products():
     limit           = request.args.get('limit')
     results         = []
     count           = 0
-    cutoff          = 2
+    cutoff          = 10
 
     if (limit is not None and int(limit) >= 0):
         cutoff = int(limit)
@@ -56,7 +56,7 @@ def list_products():
             break
         if matches_clause(category,      value['category']) and \
            matches_clause(discontinued,  value['discontinued']) and \
-           matches_price(min_price, max_price, price, int(value['price'])):
+           matches_price(min_price, max_price, price, value['price']):
                 results.append(products[key])
         count += 1
 
