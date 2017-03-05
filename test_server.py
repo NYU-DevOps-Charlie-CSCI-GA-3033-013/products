@@ -32,17 +32,25 @@ class TestProductServer(unittest.TestCase):
         resp = self.app.get('/products')
         #print 'resp_data: ' + resp.data
         self.assertTrue( resp.status_code == HTTP_200_OK )
-        self.assertTrue( len(resp.data) > 0 ) 
 
-    def test_get_product_price(self):
-        resp = self.app.get('/products?minPrice=99&maxPrice=999')
-        self.assertTrue( resp.status_code == HTTP_200_OK )
         data = json.loads(resp.data)
+        self.assertTrue( len(resp.data) > 0 ) 
         self.assertTrue(data[0]['name'] == 'TV')
         self.assertTrue(data[1]['name'] == 'Blender')
 
+    def test_get_product_price(self):
+        resp1 = self.app.get('/products?min-price=100')
+        self.assertTrue( resp1.status_code == HTTP_200_OK )
+        data1 = json.loads(resp1.data)
+        self.assertTrue(data1[0]['name'] == 'TV')
+        
+        resp2 = self.app.get('/products?max-price=100')
+        self.assertTrue( resp2.status_code == HTTP_200_OK )
+        data2 = json.loads(resp2.data)
+        self.assertTrue(data2[0]['name'] == 'Blender')
+
     def test_get_product_limit(self):
-        resp = self.app.get('/products?minPrice=99&limit=1')
+        resp = self.app.get('/products?limit=1')
         self.assertTrue( resp.status_code == HTTP_200_OK )
         data = json.loads(resp.data)
         self.assertTrue( len(data) == 1)
@@ -80,7 +88,7 @@ class TestProductServer(unittest.TestCase):
         # check the price of the product
         self.assertTrue (new_json['price'] == '99')
         # check that count has gone up and includes sammy
-        resp = self.app.get('/products')
+        resp = self.app.get('/products?limit=' + str(product_count + 1))
         # print 'resp_data(2): ' + resp.data
         data = json.loads(resp.data)
         self.assertTrue( resp.status_code == HTTP_200_OK )
