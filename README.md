@@ -65,7 +65,17 @@ In our case, it will contain- Flask==0.12
 This is done by creating a pipeline and connecting it to our GitHub Organization
 
 13. On your Bluemix App, got to 'Overview' and scroll down to continuous delivery and click on 'Enable' to enable CD Toolchain which includes GitHub Integration, DevOps Pipeline, deployment to Bluemix, and a WEB IDE
-14. Scroll down on the next page to give the name of the toolchain. This name should be SAME AS the name of your App. Select the Tool Integration as GitHub and Scroll down to Authorize (this is asked only once while integrating with GitHub)
+In case you're using a Git Organization, the enable button won't work since it only shows personal Repos. Hence you need to create a CD Pipeline manually in the following way-
+
+14. Go to the dashboard and click on 'Continuous Delivery' under services, if it doesn't show CD then create a new Service and select 'Continuous Delivery' under DevOps filter
+15. Start with a pipeline and select 'Cloud Foundry' as the template, and use the APP NAME for Pipeline Name and Application Name. Also give a name to the toolchain.
+16. Scroll down to Source code and select your Git Organization name and press 'Create'. You now have a Pipeline
+connected to your organization repo in GitHub.
+
+
+In case you're Using Git Repos, do the following steps-
+
+14. Scroll down on the next page to give the name of the toolchain.
 15. Select Repository Type as Existing and then select your Organization on GitHub as the Source Repo URL
 16. Select the 'Delivery Pipeline' in the next page
 17. Edit the manifest.yml file to change the name and host of the app to the name provisioned in your Bluemix and push back the changes. This will automatically kick off the DevOps Pipeline
