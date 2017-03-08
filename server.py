@@ -36,33 +36,36 @@ def index():
 ######################################################################
 @app.route('/products', methods=['GET'])
 def list_products():
-<<<<<<< HEAD
-    category        = request.args.get('category')
-    discontinued    = str2bool(request.args.get('discontinued'))
-    min_price       = request.args.get('min-price')
-    max_price       = request.args.get('max-price')
-    price           = request.args.get('price')
-    limit           = request.args.get('limit')
-    results         = []
-    count           = 0
-    cutoff          = 10
-
-    if (limit is not None and int(limit) >= 0):
-        cutoff = int(limit)
-    elif (limit is not None and int(limit) < 0):
-        return reply(results, HTTP_400_BAD_REQUEST)
-        
-    for key, value in products.iteritems():
-        if (count == cutoff):
-            break
-        if matches_clause(category,      value['category']) and \
+	category        = request.args.get('category')
+	discontinued    = str2bool(request.args.get('discontinued'))
+	min_price       = request.args.get('min-price')
+	max_price       = request.args.get('max-price')
+	price           = request.args.get('price')
+	limit           = request.args.get('limit')
+	search_term		= request.args.get('search')
+	results         = []
+	count           = 0
+	cutoff          = 10
+	
+	if (limit is not None and int(limit) >= 0):
+		cutoff = int(limit)
+	elif (limit is not None and int(limit) < 0):
+		return reply(results, HTTP_400_BAD_REQUEST)
+	for key, value in products.iteritems():
+		if (count == cutoff):
+			break
+		if matches_clause(category,      value['category']) and \
            matches_clause(discontinued,  value['discontinued']) and \
-           matches_price(min_price, max_price, price, value['price']):
-                results.append(products[key])
-        count += 1
+           matches_price(min_price, max_price, price, value['price']) and\
+		   matches_term(search_term, value['category'], value['name'], value['description'].decode('utf-8')):
+			results.append(products[key])
+			count += 1
+	
+	return reply(results, HTTP_200_OK)
 
-    return reply(results, HTTP_200_OK)
-
+def matches_term(term, category, name, description):
+	return (term is None or term.lower() in category.lower() or term.lower() in name.lower() or term.lower() in description.lower())
+	
 def matches_price(min_price, max_price, price, value):
     return ((min_price is None or int(min_price) <= value) and \
            (max_price is None or int(max_price) >= value) and \
@@ -70,27 +73,6 @@ def matches_price(min_price, max_price, price, value):
 
 def matches_clause(clause_value, item_value):
     return clause_value is None or clause_value == item_value 
-=======
-	category=request.args.get('category')
-	discontinued = str2bool(request.args.get('discontinued'))
-	search_term=(request.args.get('search')).lower()
-	#print ("Category", category)
-	#print ("discontinued", discontinued)
-	#print ("search_term", search_term)
-	results = []
-	for key, value in products.iteritems():
-		if category is None and discontinued is None and search_term is None:
-			results.append(products[key])
-		elif matchesClause(category, value['category']) \
-			and matchesClause(discontinued, value['discontinued']):
-			results.append(products[key])
-		elif search_term in value['category'].lower() or search_term in value['name'].lower():
-			results.append(products[key])
-	return reply(results, HTTP_200_OK)
-
-def matchesClause(clause_value, item_value):
-    return clause_value is not None and clause_value in item_value 
->>>>>>> modified code for list_products to search
 
 ######################################################################
 # RETRIEVE A product
@@ -180,15 +162,16 @@ def reply(message, rc):
     return response
 
 def is_valid(data):
-    valid = False
-    try:
-        name = data['name']
-        category = data['category']
-        price = data['price']
-        valid = True
-    except KeyError as err:
-        app.logger.error('Missing parameter error: %s', err)
-    return valid
+	valid = False
+	try:
+		name = data['name']
+		category = data['category']
+		price = data['price']
+		description = data['description']
+		valid = True
+	except KeyError as err:
+		app.logger.error('Missing parameter error: %s', err)
+	return valid
 
 PRODUCTS_DATA_SOURCE_FILE = 'sampleSchema_products.csv'
 def get_product_data():
@@ -197,14 +180,15 @@ def get_product_data():
         reader = csv.DictReader(csvfile)
         for row in reader:
             prod_data[int(row['id'])] = {   'id':int(row['id']), 'name':row['name'], 'category':row['category'], \
-                                            'discontinued': row.get('discontinued', False), \
+                                            'description':row['description'], 'discontinued': row.get('discontinued', False), \
                                             'price': int(row['price'])   }
     return prod_data
 
 def insertUpdateProdEntry(product_id, products, json_payload):
-    products[product_id] = {'id': product_id, 'name': json_payload['name'], 'category': json_payload['category']}
-    products[product_id]['discontinued'] = json_payload.get('discontinued', False)
-    products[product_id]['price'] = json_payload.get('price')
+	products[product_id] = {'id': product_id, 'name': json_payload['name'], 'category': json_payload['category']}
+	products[product_id]['description'] = json_payload.get('description')
+	products[product_id]['discontinued'] = json_payload.get('discontinued', False)
+	products[product_id]['price'] = json_payload.get('price')
     
 def str2bool(value):
   return None if value is None else value.lower() in ("yes", "true", "t", "1")
