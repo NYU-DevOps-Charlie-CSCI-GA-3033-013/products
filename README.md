@@ -6,7 +6,22 @@ categorized but they donʼt have to be for this assignment. They should have a u
 (perhaps a SKU), a name, description, price, and others attributes like perhaps an image.
 
 
-Cloud Deployment:
+
+# Setting up a Vagrantfile:
+
+1. Navigate to the your project directory in a terminal and do:
+vagrant up
+2. To start the VM do:
+vagrant ssh
+3. Navigate to the vagrant directory into your VM by doing:
+cd /vagrant
+4. To run the service:
+python server.py
+5. The app will run on
+http://192.168.33.10:5000
+
+
+#Cloud Deployment:
 
 Following are the steps to create an App on IBM Bluemix-
 
