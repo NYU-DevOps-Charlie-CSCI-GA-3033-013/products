@@ -20,6 +20,19 @@ python server.py
 5. The app will run on
 http://192.168.33.10:5000
 
+#RESTful API calls:
+In addition to the standard REST API calls (GET, PUT, POST, DELETE), the service suports the following:
+
+1. Discontinue: an action to discontinue a product:
+`PUT /products/1/discontinue`
+2. Limit the result-set returned:
+`GET /products?limit=5`
+3. Query by attribute: 
+    * Query by price:  
+        * `GET /products?min-price=10&max-price=20`
+        * `GET /products?price=100`
+    * Query by category: `GET /products?category=Electronics`
+    * Query by distcontinued status: `GET /products?discontinued=true`
 
 #Cloud Deployment:
 
