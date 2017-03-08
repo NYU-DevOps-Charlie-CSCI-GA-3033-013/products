@@ -42,14 +42,14 @@ Following are the steps to create an App on IBM Bluemix-
 2. Create a new App
 3. Choose 'Python Flask' as the boilerplate
 4. Name your App and choose a unique URL for it
-5. You can see the various details of your App under various tabs like overview, Logs, etc.
+5. You can see the details of your App under various tabs like overview, Logs, etc.
 6. To select a connection service for the App, go to 'connections' and click on 'connect new'
 7. Filter the list of services by 'Data and Analytics' and select Redis Cloud
 8. Note that the service is bound to this particular app
 9. If asked, give the service a name
 10. Scroll down the services to select the plan of your convenience, in our case, we have selected a 30 MB Free Tier that gives 1 dedicated database and 30 connections
-11. It will ask you to restage the application. DO NOT restage it since the applications doesn't know how to use Redis yet, so press 'Cancel'
-12. Copy the following code into your vagrant file under 'Setup a Python Development Environment', before the '#instato download the CF CLI'. Make sure the URL in the code below contains the OS that is used by your VM.
+11. It will ask you to restage the application. DO NOT restage it since the application doesn't know how to use Redis yet, so press 'Cancel'
+12. Copy the following code into your vagrant file before the '#install app dependencies'. Make sure the URL in the code below contains the OS that is used by your VM.
     Our VM uses Ubutu hence the release is debian64
 
 # Install the Cloud Foundry CLI
@@ -93,6 +93,7 @@ In our case, it will contain- Flask==0.12
 This is done by creating a pipeline and connecting it to our GitHub Organization
 
 13. On your Bluemix App, got to 'Overview' and scroll down to continuous delivery and click on 'Enable' to enable CD Toolchain which includes GitHub Integration, DevOps Pipeline, deployment to Bluemix, and a WEB IDE
+
 In case you're using a Git Organization, the enable button won't work since it only shows personal Repos. Hence you need to create a CD Pipeline manually in the following way-
 
 14. Go to the dashboard and click on 'Continuous Delivery' under services, if it doesn't show CD then create a new Service and select 'Continuous Delivery' under DevOps filter
