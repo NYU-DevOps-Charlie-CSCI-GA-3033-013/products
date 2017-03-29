@@ -42,6 +42,7 @@ def list_products():
     max_price       = request.args.get('max-price')
     price           = request.args.get('price')
     limit           = request.args.get('limit')
+    search_term     = request.args.get('search')
     results         = []
     count           = 0
     cutoff          = 10
@@ -54,10 +55,11 @@ def list_products():
     for key, value in products.iteritems():
         if (count == cutoff):
             break
-        if matches_clause(category,      value['category']) and \
-           matches_clause(discontinued,  value['discontinued']) and \
-           matches_price(min_price, max_price, price, value['price']):
-                results.append(products[key])
+        if matches_clause(  category,       value['category']) and \
+           matches_clause(  discontinued,   value['discontinued']) and \
+           matches_price(   min_price,      max_price, price, value['price']) and\
+           matches_term(    search_term,    value):
+            results.append(products[key])
         count += 1
 
     return reply(results, HTTP_200_OK)
@@ -69,6 +71,12 @@ def matches_price(min_price, max_price, price, value):
 
 def matches_clause(clause_value, item_value):
     return clause_value is None or clause_value == item_value 
+
+def matches_term(term, product):
+    return  term is None or \
+            term.lower() in product['category']     .lower().split() or \
+            term.lower() in product['name']         .lower().split() or \
+            term.lower() in product['description']  .lower().split()
 
 ######################################################################
 # RETRIEVE A product
@@ -174,15 +182,16 @@ def get_product_data():
     with open(PRODUCTS_DATA_SOURCE_FILE) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            prod_data[int(row['id'])] = {   'id':int(row['id']), 'name':row['name'], 'category':row['category'], \
-                                            'discontinued': row.get('discontinued', False), \
-                                            'price': int(row['price'])   }
+            prod_data[int(row['id'])] = {   'id':           int(row['id']),     'name':         row['name'], \
+                                            'category':     row['category'],    'discontinued': row.get('discontinued', False), \
+                                            'price':        int(row['price']),  'description':  row.get('description', '')   }
     return prod_data
 
 def insertUpdateProdEntry(product_id, products, json_payload):
-    products[product_id] = {'id': product_id, 'name': json_payload['name'], 'category': json_payload['category']}
+    products[product_id] = {'id':       product_id,                 'name':  json_payload['name'], 
+                            'category': json_payload['category'],   'price': json_payload['price'] }
     products[product_id]['discontinued'] = json_payload.get('discontinued', False)
-    products[product_id]['price'] = json_payload.get('price')
+    products[product_id]['description']  = json_payload.get('description',  '')
     
 def str2bool(value):
   return None if value is None else value.lower() in ("yes", "true", "t", "1")
@@ -191,8 +200,8 @@ def str2bool(value):
 ######################################################################
 products = {}
 if __name__ == "__main__":
-    products = get_product_data();
+    products    = get_product_data();
     # Pull options from environment
-    debug = (os.getenv('DEBUG', 'False') == 'True')
-    port = os.getenv('PORT', '5000')
+    debug       = (os.getenv('DEBUG', 'False') == 'True')
+    port        = os.getenv('PORT', '5000')
     app.run(host='0.0.0.0', port=int(port), debug=debug)
