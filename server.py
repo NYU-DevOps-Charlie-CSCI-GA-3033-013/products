@@ -168,18 +168,17 @@ def reply(message, rc):
 def is_valid(data):
     valid = False
     try:
-        name = data['name']
-        category = data['category']
-        price = data['price']
-        valid = True
+        name        = data['name']
+        category    = data['category']
+        price       = data['price']
+        valid       = True
     except KeyError as err:
         app.logger.error('Missing parameter error: %s', err)
     return valid
 
-PRODUCTS_DATA_SOURCE_FILE = 'sampleSchema_products.csv'
-def get_product_data():
+def get_product_data(file_name):
     prod_data = {}
-    with open(PRODUCTS_DATA_SOURCE_FILE) as csvfile:
+    with open(file_name) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             prod_data[int(row['id'])] = {   'id':           int(row['id']),     'name':         row['name'], \
@@ -198,9 +197,10 @@ def str2bool(value):
 ######################################################################
 #   M A I N
 ######################################################################
+PRODUCTS_DATA_SOURCE_FILE = 'sampleSchema_products.csv'
 products = {}
 if __name__ == "__main__":
-    products    = get_product_data();
+    products    = get_product_data(PRODUCTS_DATA_SOURCE_FILE);
     # Pull options from environment
     debug       = (os.getenv('DEBUG', 'False') == 'True')
     port        = os.getenv('PORT', '5000')

@@ -4,7 +4,9 @@
 
 import unittest
 import json
+import os
 import server
+import time
 
 # Status Codes
 HTTP_200_OK             = 200
@@ -92,9 +94,9 @@ class TestProductServer(unittest.TestCase):
         self.assertEqual(data['id'],  2)
 
     def test_query_product_list(self):
-        self.setup_test_by_attribute('category',        'entertainment')
-        self.setup_test_by_attribute('discontinued',    True)  
-        self.setup_test_by_attribute('price',           999)  
+        self.assert_by_attribute('category',        'entertainment')
+        self.assert_by_attribute('discontinued',    True)  
+        self.assert_by_attribute('price',           999)  
 
     def test_create_product(self):
         # save the current number of products for later comparison
@@ -174,6 +176,17 @@ class TestProductServer(unittest.TestCase):
         resp = self.app.get('/products/5')
         self.assertEqual(resp.status_code, HTTP_404_NOT_FOUND)
 
+    #FIXME - Will be removed with persistence
+    def test_csv_data_import(self):
+        test_import_file_name   = 'test_read_csv_' + str(time.time()) + '.csv'
+        with open(test_import_file_name, "w") as text_file:
+            text_file.write('id,name,category,price'+os.linesep+'1,lamp,appliances,10')
+        imported_products       = server.get_product_data(test_import_file_name);
+        test_products = {'id':              1,              'name':         'lamp',\
+                         'category':        'appliances',   'price':        10,\
+                         'discontinued':    False,          'description':  ''}
+        self.assertEqual(sorted(imported_products[1].items()), sorted(test_products.items()))
+        os.remove(test_import_file_name)   
 ######################################################################
 # Utility functions
 ######################################################################
@@ -186,7 +199,7 @@ class TestProductServer(unittest.TestCase):
         data = json.loads(resp.data)
         return len(data)
 
-    def setup_test_by_attribute(self, attr_name, attr_value):
+    def assert_by_attribute(self, attr_name, attr_value):
         resp        = self.app.get('/products', \
                             query_string='attr_name=attr_value'.format(attr_name=attr_name, attr_value=attr_value))
         self.assertEqual(resp.status_code, HTTP_200_OK)
