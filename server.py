@@ -27,11 +27,12 @@ lock = Lock()
 ######################################################################
 @app.route('/')
 def index():
-    products_url = request.base_url + "products"
-    return jsonify(name='product Demo REST API Service',
-                   version='1.0',
-                   url=products_url
-                   ), HTTP_200_OK
+    # products_url = request.base_url + "products"
+    return send_static_file('index.html')
+    # return jsonify(name='product Demo REST API Service',
+    #                version='1.0',
+    #                url=products_url
+    #                ), HTTP_200_OK
 
 ######################################################################
 # LIST ALL products
