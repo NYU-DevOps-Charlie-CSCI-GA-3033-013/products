@@ -28,7 +28,7 @@ lock = Lock()
 @app.route('/')
 def index():
     # products_url = request.base_url + "products"
-    return 'index.html'
+    return app.send_static_file('index.html')
     # return jsonify(name='product Demo REST API Service',
     #                version='1.0',
     #                url=products_url
