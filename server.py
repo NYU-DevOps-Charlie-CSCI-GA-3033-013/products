@@ -114,6 +114,26 @@ def create_products():
 	return reply(message, rc)
 
 ######################################################################
+# LOAD Products into redis
+######################################################################
+def data_load(payload):
+    if is_valid(payload):
+        id = next_index()
+        #insertUpdateProdEntry(id, products, payload)
+        redis.hset(id,'id',id)
+        redis.hset(id,'price',payload['price'])
+        redis.hset(id,'name',payload['name'])
+        redis.hset(id,'category',payload['category'])
+        redis.hset(id,'discontinued',payload['discontinued'] )
+        message = { 'success' : 'Data is valid'}
+        redis.hset('newkey','newkey',int(id)+1)
+        rc = HTTP_201_CREATED
+    else:
+        message = { 'error' : 'Data is not valid' }
+        rc = HTTP_400_BAD_REQUEST
+    return reply(message, rc)
+
+######################################################################
 # UPDATE AN EXISTING product
 ######################################################################
 @app.route('/products/<int:id>', methods=['PUT'])
@@ -200,7 +220,7 @@ def connect_to_redis(hostname, port, password):
 #   2) With Redis running on the local server as with Travis CI
 #   3) With Redis --link ed in a Docker container called 'redis'
 ######################################################################
-def inititalize_redis():
+def initialize_redis():
     global redis
     redis = None
     # Get the crdentials from the Bluemix environment
