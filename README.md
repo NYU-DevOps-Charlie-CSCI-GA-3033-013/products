@@ -5,7 +5,7 @@ The products resource represents the store items that the customer can buy. They
 categorized but they donʼt have to be for this assignment. They should have a unique id
 (perhaps a SKU), a name, description, price, and others attributes like perhaps an image.
 
-
+[![Build Status]](https://travis-ci.org/NYU-DevOps-Charlie-CSCI-GA-3033-013/products.svg?branch=master)
 
 # Setting up a Vagrantfile:
 
