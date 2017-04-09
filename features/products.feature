@@ -23,4 +23,16 @@ Scenario: List all products
     	And I should see "Apple MacBook Pro"
 
 
+Scenario: Update a product
+	Given the following products
+        | id | name                  | category             | discontinued | price |
+        |  1 | iPhone 7              | electronics          | False        | 800   |
+        |  2 | ActiveCare Hair Dryer | bathroom appliances  | False        | 200   |
+        |  2 | Apple MacBook Pro     | electronics          | False        | 2100  |
+	    When I retrieve "/products" with id "1"
+	    And I change "category" to "phones"
+	    And I update "/products" with id "1"
+	    And I retrieve "/products" with id "1"
+	    Then I should see "phones"
+
 
