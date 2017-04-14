@@ -148,13 +148,15 @@ class TestProductServer(unittest.TestCase):
         data = json.loads(resp.data)
         return len(data)
     
+    """
     def setup_test_by_attribute(self, attr_name, attr_value):
         resp = self.app.get('/products', \
                             query_string='attr_name=attr_value'.format(attr_name=unicode(attr_name), attr_value=unicode(attr_value)))
         self.assertTrue( resp.status_code == HTTP_200_OK )
         self.assertTrue( len(resp.data) > 0 )
         data        = json.loads(resp.data)[0]
-        self.assertEquals(data[attr_name], attr_value) 
+        self.assertEquals(data[attr_name], attr_value)
+    """     
 ######################################################################
 #   M A I N
 ######################################################################
