@@ -16,7 +16,7 @@ Scenario: List all products
         | id | name                  | category             | discontinued | price |
         |  1 | iPhone 7              | electronics          | False        | 800   |
         |  2 | ActiveCare Hair Dryer | bathroom appliances  | False        | 200   |
-        |  2 | Apple MacBook Pro     | electronics          | False        | 2100  |
+        |  3 | Apple MacBook Pro     | electronics          | False        | 2100  |
     	When I visit "/products"
     	Then I should see "iPhone 7"
     	And I should see "ActiveCare Hair Dryer"
@@ -28,7 +28,7 @@ Scenario: Update a product
         | id | name                  | category             | discontinued | price |
         |  1 | iPhone 7              | electronics          | False        | 800   |
         |  2 | ActiveCare Hair Dryer | bathroom appliances  | False        | 200   |
-        |  2 | Apple MacBook Pro     | electronics          | False        | 2100  |
+        |  3 | Apple MacBook Pro     | electronics          | False        | 2100  |
 	    When I retrieve "/products" with id "1"
 	    And I change "category" to "phones"
 	    And I update "/products" with id "1"
