@@ -10,6 +10,7 @@ before_script: redis-cli ping
 
 script:
   - nosetests --with-coverage --cover-package=server
+  - behave
 
 after_success:
   - codecov

@@ -158,7 +158,6 @@ def delete_products(id):
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 def next_index():
-    # return max(products.keys()) + 1
     if not redis.exists('newkey'):
         redis.hset('newkey','newkey',len(redis.keys())+1)
     return redis.hget('newkey','newkey')
@@ -207,7 +206,7 @@ def connect_to_redis(hostname, port, password):
 #   2) With Redis running on the local server as with Travis CI
 #   3) With Redis --link ed in a Docker container called 'redis'
 ######################################################################
-def inititalize_redis():
+def initialize_redis():
     global redis
     redis = None
     # Get the crdentials from the Bluemix environment
@@ -228,7 +227,6 @@ def inititalize_redis():
         # if you end up here, redis instance is down.
         app.logger.error('*** FATAL ERROR: Could not connect to the Redis Service')
         exit(1)
-
 
 ######################################################################
 # Delete data from redis
@@ -262,7 +260,7 @@ def data_load(payload):
 ######################################################################
 products = {}
 if __name__ == "__main__":
-	inititalize_redis()
+	initialize_redis()
 	debug = (os.getenv('DEBUG', 'False') == 'True')
 	port = os.getenv('PORT', '5000')
 	app.run(host='0.0.0.0', port=int(port), debug=debug)

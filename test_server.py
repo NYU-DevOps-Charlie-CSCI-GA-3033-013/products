@@ -20,7 +20,7 @@ class TestProductServer(unittest.TestCase):
     def setUp(self):
         server.app.debug = True
         self.app = server.app.test_client()
-        server.inititalize_redis()
+        server.initialize_redis()
         server.data_reset()
         products = [    { 'name': 'TV',         'category': 'entertainment',   'discontinued': True,    'price': 999}, 
                         { 'name': 'Blender',    'category': 'appliances',      'discontinued': False,   'price': 99} ]
