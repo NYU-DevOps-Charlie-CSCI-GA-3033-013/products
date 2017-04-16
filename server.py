@@ -114,6 +114,33 @@ def create_products():
 	return reply(message, rc)
 
 ######################################################################
+# Delete data from redis
+######################################################################
+
+def data_reset():
+    redis.flushall()
+
+######################################################################
+# LOAD Products into redis
+######################################################################
+def data_load(payload):
+    if is_valid(payload):
+        next_id = next_index()
+        #insertUpdateProdEntry(id, products, payload)
+        redis.hset(next_id,'id',next_id)
+        redis.hset(next_id,'price',payload['price'])
+        redis.hset(next_id,'name',payload['name'])
+        redis.hset(next_id,'category',payload['category'])
+        redis.hset(next_id,'discontinued',payload['discontinued'] )
+        message = { 'success' : 'Data is valid'}
+        redis.hset('newkey','newkey',int(next_id)+1)
+        rc = HTTP_201_CREATED
+    else:
+        message = { 'error' : 'Data is not valid' }
+        rc = HTTP_400_BAD_REQUEST
+    return reply(message, rc)
+
+######################################################################
 # UPDATE AN EXISTING product
 ######################################################################
 @app.route('/products/<int:id>', methods=['PUT'])
@@ -159,8 +186,9 @@ def delete_products(id):
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 def next_index():
-    # return max(products.keys()) + 1
-	return redis.hget('newkey','newkey')
+    if not redis.exists('newkey'):
+        redis.hset('newkey','newkey',len(redis.keys())+1)
+    return redis.hget('newkey','newkey')
 
 def reply(message, rc):
     response = Response(json.dumps(message))
@@ -200,7 +228,7 @@ def connect_to_redis(hostname, port, password):
 #   2) With Redis running on the local server as with Travis CI
 #   3) With Redis --link ed in a Docker container called 'redis'
 ######################################################################
-def inititalize_redis():
+def initialize_redis():
     global redis
     redis = None
     # Get the crdentials from the Bluemix environment
@@ -229,6 +257,4 @@ if __name__ == "__main__":
 	inititalize_redis()
 	debug = (os.getenv('DEBUG', 'False') == 'True')
 	port = os.getenv('PORT', '5000')
-	if not redis.exists('newkey'):
-		redis.hset('newkey','newkey',len(redis.keys())+1)
 	app.run(host='0.0.0.0', port=int(port), debug=debug)
