@@ -48,24 +48,23 @@ def list_products():
     results         = []
     count           = 0
     cutoff          = 10
-
+    
     if (limit is not None and int(limit) >= 0):
         cutoff = int(limit)
     elif (limit is not None and int(limit) < 0):
         return reply(results, HTTP_400_BAD_REQUEST)
-        
+    
     for key in redis.keys():
-		if(key == 'newkey'):
-			continue
-		product = redis.hgetall(key)
-		if(count == cutoff):
-			break
-		if matches_clause(category,      product.get('category')) and \
-          matches_clause(discontinued, str2bool(product.get('discontinued'))) and \
-          matches_price(min_price, max_price, price, int(product.get('price'))):
-							results.append(product)
- 		count += 1
-
+        if(key == 'newkey'):
+            continue
+        product = prepare_product(redis.hgetall(key))
+        if(count == cutoff):
+            break
+        if matches_clause(category,      product.get('category')) and \
+            matches_clause(discontinued, product.get('discontinued')) and \
+            matches_price(min_price, max_price, price, product.get('price')):
+            results.append(product)
+            count += 1        
     return reply(results, HTTP_200_OK)
 
 def matches_price(min_price, max_price, price, value):
@@ -83,7 +82,7 @@ def matches_clause(clause_value, item_value):
 def get_products(id):
  message = []
  if redis.exists(id):
-		message = redis.hgetall(id)
+		message = prepare_product(redis.hgetall(id))
 		rc = HTTP_200_OK
  else:
 		message = { 'error' : 'product with id: %s was not found' % str(id) }
@@ -101,10 +100,10 @@ def create_products():
 		id = next_index()
 		#insertUpdateProdEntry(id, products, payload)
 		redis.hset(id,'id',id)
-		redis.hset(id,'price',payload['price'])
-		redis.hset(id,'name',payload['name'])
-		redis.hset(id,'category',payload['category'])
-		redis.hset(id,'discontinued',payload['discontinued'] )
+		redis.hset(id,'price',        payload['price'])
+		redis.hset(id,'name',         payload['name'])
+		redis.hset(id,'category',     payload['category'])
+		redis.hset(id,'discontinued', payload.get('discontinued', False) )
 		message = { 'success' : 'Data is valid'}
 		redis.hset('newkey','newkey',int(id)+1)
 		rc = HTTP_201_CREATED
@@ -114,43 +113,16 @@ def create_products():
 	return reply(message, rc)
 
 ######################################################################
-# Delete data from redis
-######################################################################
-
-def data_reset():
-    redis.flushall()
-
-######################################################################
-# LOAD Products into redis
-######################################################################
-def data_load(payload):
-    if is_valid(payload):
-        next_id = next_index()
-        #insertUpdateProdEntry(id, products, payload)
-        redis.hset(next_id,'id',next_id)
-        redis.hset(next_id,'price',payload['price'])
-        redis.hset(next_id,'name',payload['name'])
-        redis.hset(next_id,'category',payload['category'])
-        redis.hset(next_id,'discontinued',payload['discontinued'] )
-        message = { 'success' : 'Data is valid'}
-        redis.hset('newkey','newkey',int(next_id)+1)
-        rc = HTTP_201_CREATED
-    else:
-        message = { 'error' : 'Data is not valid' }
-        rc = HTTP_400_BAD_REQUEST
-    return reply(message, rc)
-
-######################################################################
 # UPDATE AN EXISTING product
 ######################################################################
 @app.route('/products/<int:id>', methods=['PUT'])
 def update_products(id):
         payload = request.get_json()
         if is_valid(payload):
-			redis.hset(id,'price',payload['price'])
-			redis.hset(id,'name',payload['name'])
-			redis.hset(id,'category',payload['category'])
-			redis.hset(id,'discontinued',payload['discontinued'] )
+			redis.hset(id,'price',           payload['price'])
+			redis.hset(id,'name',            payload['name'])
+			redis.hset(id,'category',        payload['category'])
+			redis.hset(id,'discontinued',    payload['discontinued'] )
 			message = { 'success' : 'update done' }
 			rc = HTTP_200_OK
         else:
@@ -165,7 +137,7 @@ def update_products(id):
 def discontinue_products(id):
 	if redis.exists(id):
 		redis.hset(id,'discontinued', 'True' )
-		message = redis.hgetall(id)
+		message = prepare_product(redis.hgetall(id))
 		rc = HTTP_200_OK
 	else:
 		message                         = { 'error' : 'product %s was not found' % id }
@@ -199,17 +171,23 @@ def reply(message, rc):
 def is_valid(data):
     valid = False
     try:
-        name = data['name']
+        name     = data['name']
         category = data['category']
-        price = data['price']
-        valid = True
+        price    = data['price']
+        valid    = True
     except KeyError as err:
         app.logger.error('Missing parameter error: %s', err)
     return valid
     
 def str2bool(value):
   return None if value is None else value.lower() in ("yes", "true", "t", "1")
-  
+
+def prepare_product(redis_product):
+    return {    'id'            : int(  redis_product['id']),
+                'name'          :       redis_product['name'],
+                'category'      :       redis_product['category'],
+                'price'         : int(  redis_product['price']), 
+                'discontinued'  : str2bool( redis_product['discontinued'])}  
 ######################################################################
 # Connect to Redis and catch connection exceptions
 ######################################################################
@@ -249,12 +227,40 @@ def initialize_redis():
         # if you end up here, redis instance is down.
         app.logger.error('*** FATAL ERROR: Could not connect to the Redis Service')
         exit(1)
+
+######################################################################
+# Delete data from redis
+######################################################################
+
+def data_reset():
+    redis.flushall()
+    
+######################################################################
+# LOAD Products into redis
+######################################################################
+def data_load(payload):
+    if is_valid(payload):
+        id = next_index()
+        #insertUpdateProdEntry(id, products, payload)
+        redis.hset(id,'id',             id)
+        redis.hset(id,'price',          payload['price'])
+        redis.hset(id,'name',           payload['name'])
+        redis.hset(id,'category',       payload['category'])
+        redis.hset(id,'discontinued',   payload['discontinued'] )
+        message = { 'success' : 'Data is valid'}
+        redis.hset('newkey','newkey',   int(id)+1)
+        rc = HTTP_201_CREATED
+    else:
+        message = { 'error' : 'Data is not valid' }
+        rc = HTTP_400_BAD_REQUEST
+    return reply(message, rc)
+    
 ######################################################################
 #   M A I N
 ######################################################################
 products = {}
 if __name__ == "__main__":
-	inititalize_redis()
+	initialize_redis()
 	debug = (os.getenv('DEBUG', 'False') == 'True')
 	port = os.getenv('PORT', '5000')
 	app.run(host='0.0.0.0', port=int(port), debug=debug)
