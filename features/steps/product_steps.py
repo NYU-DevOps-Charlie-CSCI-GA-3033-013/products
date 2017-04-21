@@ -85,13 +85,3 @@ def step_imp(context, url, discontinued_status):
     target_url = url + "?discontinued="+ discontinued_status
     context.resp = context.app.get(target_url)
     assert context.resp.status_code == 200
-
-
-
-
-# @then(u'I should see a list of pets')
-# def step_impl(context):
-#     assert context.resp.status_code == 200
-#     assert len(context.resp.data) > 0
-
-
