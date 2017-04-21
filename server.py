@@ -254,7 +254,7 @@ def initialize_redis():
 ######################################################################
 products = {}
 if __name__ == "__main__":
-	inititalize_redis()
+	initialize_redis()
 	debug = (os.getenv('DEBUG', 'False') == 'True')
 	port = os.getenv('PORT', '5000')
 	app.run(host='0.0.0.0', port=int(port), debug=debug)

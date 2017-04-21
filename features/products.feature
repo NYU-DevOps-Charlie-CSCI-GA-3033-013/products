@@ -5,6 +5,12 @@ Feature: The products service back-end
 
 Background:
     Given the server is started
+    Given the following products
+        | id | name                  | category             | discontinued | price |
+        |  1 | iPhone 7              | electronics          | False        | 800   |
+        |  2 | ActiveCare Hair Dryer | bathroom appliances  | False        | 200   |
+        |  3 | Apple MacBook Pro     | electronics          | False        | 2100  |
+
  
 Scenario: The server is running
     When I visit the "home page"
@@ -12,11 +18,6 @@ Scenario: The server is running
     Then I should not see "404 Not Found"
 
 Scenario: List all products
-	Given the following products
-        | id | name                  | category             | discontinued | price |
-        |  1 | iPhone 7              | electronics          | False        | 800   |
-        |  2 | ActiveCare Hair Dryer | bathroom appliances  | False        | 200   |
-        |  3 | Apple MacBook Pro     | electronics          | False        | 2100  |
     	When I visit "/products"
     	Then I should see "iPhone 7"
     	And I should see "ActiveCare Hair Dryer"
@@ -24,15 +25,33 @@ Scenario: List all products
 
 
 Scenario: Update a product
-	Given the following products
-        | id | name                  | category             | discontinued | price |
-        |  1 | iPhone 7              | electronics          | False        | 800   |
-        |  2 | ActiveCare Hair Dryer | bathroom appliances  | False        | 200   |
-        |  3 | Apple MacBook Pro     | electronics          | False        | 2100  |
-	    When I retrieve "/products" with id "1"
+	When I retrieve "/products" with id "1"
 	    And I change "category" to "phones"
 	    And I update "/products" with id "1"
 	    And I retrieve "/products" with id "1"
 	    Then I should see "phones"
+        
+
+Scenario: Search for a product with price
+    When I search "/products" with price "800"
+        Then I should see "iPhone 7"
 
 
+Scenario: Search for a product with price range
+    When I search "/products" with minprice "100" and maxprice "1000"
+        Then I should see "iPhone 7"
+        And I should see "ActiveCare Hair Dryer"
+
+
+Scenario: Search for a product with category
+    When I search "/products" with category "electronics"
+        Then I should see "iPhone 7"
+        And I should see "Apple MacBook Pro"
+
+
+Scenario: Search for a product with discontinued status
+    When I search "/products" with discontinued "False"
+        Then I should see "iPhone 7"
+        And I should see "ActiveCare Hair Dryer"
+        And I should see "Apple MacBook Pro"
+        

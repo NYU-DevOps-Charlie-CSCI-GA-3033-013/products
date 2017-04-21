@@ -32,6 +32,8 @@ def step_impl(context, url):
     context.resp = context.app.get(url)
     assert context.resp.status_code == 200
 
+##### CRUD FUNCTIONS #####
+
 @when(u'I delete "{url}" with id "{id}"')
 def step_impl(context, url, id):
     target_url = url + '/' + id
@@ -57,7 +59,29 @@ def step_impl(context, url, id):
     context.resp = context.app.put(target_url, data=context.resp.data, content_type='application/json')
     assert context.resp.status_code == 200
 
-# @then(u'I should see a list of pets')
-# def step_impl(context):
-#     assert context.resp.status_code == 200
-#     assert len(context.resp.data) > 0
+
+##### SEARCHING FOR PRODUCTS ######
+
+@when(u'I search "{url}" with minprice "{minprice}" and maxprice "{maxprice}"')
+def step_imp(context, url, minprice, maxprice):
+    target_url = url + "?min-price="+ minprice + "&max-price=" + maxprice 
+    context.resp = context.app.get(target_url)
+    assert context.resp.status_code == 200
+
+@when(u'I search "{url}" with price "{price}"')
+def step_imp(context, url, price):
+    target_url = url + "?price="+ price 
+    context.resp = context.app.get(target_url)
+    assert context.resp.status_code == 200
+
+@when(u'I search "{url}" with category "{category}"')
+def step_imp(context, url, category):
+    target_url = url + "?category="+ category 
+    context.resp = context.app.get(target_url)
+    assert context.resp.status_code == 200
+
+@when(u'I search "{url}" with discontinued "{discontinued_status}"')
+def step_imp(context, url, discontinued_status):
+    target_url = url + "?discontinued="+ discontinued_status
+    context.resp = context.app.get(target_url)
+    assert context.resp.status_code == 200
