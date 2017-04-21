@@ -1,6 +1,7 @@
 from behave import *
 import json
 import server
+from models import Product
 
 @given(u'the server is started')
 def step_impl(context):
@@ -23,9 +24,9 @@ def step_impl(context, message):
 @given(u'the following products')
 def step_impl(context):
     for row in context.table:
-        server.data_load({'id':int(row['id']), 'name':row['name'], 'category':row['category'], 
-                                            'discontinued': row.get('discontinued', False), 
-                                            'price': int(row['price'])})
+        product = Product()
+        product.deserialize(row)
+        product.save()
 
 @when(u'I visit "{url}"')
 def step_impl(context, url):

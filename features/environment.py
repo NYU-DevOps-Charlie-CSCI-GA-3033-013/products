@@ -6,3 +6,6 @@ def before_all(context):
     server.initialize_redis()
     server.data_reset()
     context.server = server
+
+def after_all(context):
+    server.data_reset()
