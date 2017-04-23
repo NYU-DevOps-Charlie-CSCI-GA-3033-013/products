@@ -23,7 +23,6 @@ class TestProducts(unittest.TestCase):
     def tearDown(self):     
         Product.remove_all()      
 
-
     def test_create_a_product(self):
         # Create a product and assert that it exists
         product = Product(id=0, name="TV", category="entertainment", price=500)
