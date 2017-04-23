@@ -48,6 +48,10 @@ Scenario: Search for a product with category
         Then I should see "iPhone 7"
         And I should see "Apple MacBook Pro"
 
+Scenario: Search for a product with name
+    When I search "/products" with name "iPhone 7"
+        Then I should see "iPhone 7"
+        And I should not see "Apple MacBook Pro"
 
 Scenario: Search for a product with discontinued status
     When I search "/products" with discontinued "False"

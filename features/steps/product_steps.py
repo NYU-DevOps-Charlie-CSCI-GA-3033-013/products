@@ -82,6 +82,12 @@ def step_imp(context, url, category):
     context.resp = context.app.get(target_url)
     assert context.resp.status_code == 200
 
+@when(u'I search "{url}" with name "{name}"')
+def step_imp(context, url, name):
+    target_url = url + "?name="+ name 
+    context.resp = context.app.get(target_url)
+    assert context.resp.status_code == 200
+
 @when(u'I search "{url}" with discontinued "{discontinued_status}"')
 def step_imp(context, url, discontinued_status):
     target_url = url + "?discontinued="+ discontinued_status
