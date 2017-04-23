@@ -28,10 +28,6 @@ HTTP_409_CONFLICT       = 409
 def request_validation_error(e):
     return bad_request(e)
 
-@app.errorhandler(404)
-def not_found(e):
-    return reply( { "status":404, "error":'Not Found', "message":e.description }, HTTP_404_NOT_FOUND)
-
 @app.errorhandler(400)
 def bad_request(e):
     return reply({ "status":400, "error":'Bad Request', "message": e.message}, HTTP_400_BAD_REQUEST)
@@ -188,7 +184,7 @@ def connect_to_redis(hostname, port, password):
 # This method will work in the following conditions:
 #   1) In Bluemix with Redis bound through VCAP_SERVICES
 #   2) With Redis running on the local server as with Travis CI
-#   3) With Redis --link ed in a Docker container called 'redis'
+#   3) With Redis --linked in a Docker container called 'redis'
 ######################################################################
 def initialize_redis():
     global redis

@@ -52,9 +52,9 @@ class Product(object):
             self.price          = data['price']
             self.discontinued   = data.get('discontinued', False)
         except KeyError as e:
-            raise DataValidationError('Invalid product: missing ' + e.args[0])
+            raise ValueError('Invalid product: missing ' + e.args[0])
         except TypeError as e:
-            raise DataValidationError('Invalid product: body of request contained bad or no data')
+            raise ValueError('Invalid product: body of request contained bad or no data')
         return self
 
 ######################################################################
@@ -97,11 +97,4 @@ class Product(object):
             product = Product(data['id']).deserialize(data)
             return product
         else:
-            return None
-
-    @staticmethod
-    def find_or_404(id):
-        product = Product.get(id)
-        if not product:
-            raise NotFound("Product with id '{}' was not found.".format(id))
-        return product    
+            return None 
