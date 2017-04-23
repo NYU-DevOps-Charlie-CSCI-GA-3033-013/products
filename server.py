@@ -51,13 +51,18 @@ def index():
 ######################################################################
 @app.route('/products', methods=['GET'])
 def list_products():
+    name            = request.args.get('name')
+    if name:
+        name        = name.lower()
     category        = request.args.get('category')
+    if category:
+        category    = category.lower()
     discontinued    = str2bool(request.args.get('discontinued'))
     min_price       = request.args.get('min-price')
     max_price       = request.args.get('max-price')
     price           = request.args.get('price')
     limit           = request.args.get('limit')
-    products         = []
+    products        = []
     count           = 0
     cutoff          = 10
     
@@ -67,8 +72,11 @@ def list_products():
         return reply(products, HTTP_400_BAD_REQUEST)
     
     for product in Product.all():
+        #print str(product.id) + ', ' + product.name + ', ' + product.category + ', ' + str(product.price) + ', ' + str(product.discontinued) 
         if(count == cutoff):
-            break        if matches_clause(category, product.category) and\
+            break
+        if matches_clause(name,         product.name.lower()) and\
+           matches_clause(category,     product.category.lower()) and\
            matches_clause(discontinued, product.discontinued) and\
            matches_price(min_price, max_price, price, product.price):
             products.append(product)
@@ -94,7 +102,7 @@ def get_products(id):
         message = product.serialize()
         rc = HTTP_200_OK
     else:
-        message = { 'error' : 'Pet with id: %s was not found' % str(id) }
+        message = { 'error' : 'Product with id: %s was not found' % str(id) }
         rc = HTTP_404_NOT_FOUND
     return reply(message, rc)    
 
@@ -115,28 +123,28 @@ def create_products():
 ######################################################################
 @app.route('/products/<int:id>', methods=['PUT'])
 def update_products(id):
-    product = product.find(id)
+    product     = Product.find(id)
     if product:
         product.deserialize(request.get_json())
         product.save()
         message = product.serialize()
-        rc = HTTP_200_OK
+        rc      = HTTP_200_OK
     else:
         message = { 'error' : 'Product with id: %s was not found' % id }
-        rc = HTTP_404_NOT_FOUND
-	return reply(message, rc)
+        rc      = HTTP_404_NOT_FOUND
+    return reply(message, rc)
 
 ######################################################################
 # UPDATE AN EXISTING product - Discontinue action
 ######################################################################
 @app.route('/products/<int:id>/discontinue', methods=['PUT'])
 def discontinue_products(id):
-    product = product.find(id)
+    product     = Product.find(id)
     if product:
         product.discontinue()
         product.save()
         message = product.serialize()
-        rc = HTTP_200_OK
+        rc      = HTTP_200_OK
     else:
         message = { 'error' : 'Product with id: %s was not found' % id }
         rc = HTTP_404_NOT_FOUND
@@ -211,7 +219,6 @@ def initialize_redis():
 products = {}
 if __name__ == "__main__":
     initialize_redis()
-    Product.update_redis_store()
     debug  = (os.getenv('DEBUG', 'False') == 'True')
     port   = os.getenv('PORT', '5000')
     app.run(host='0.0.0.0', port=int(port), debug=debug)

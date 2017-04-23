@@ -18,7 +18,7 @@ class Product(object):
         self.discontinued   = discontinued
 
     def discontinue(self):
-        self.discontinued   = False
+        self.discontinued   = True
 
     def save(self):
         missing_attr        = None
@@ -74,7 +74,7 @@ class Product(object):
     @staticmethod
     def use_db(redis):
         Product.__redis = redis
-        
+        Product.update_redis_store()  
 
     @staticmethod
     def remove_all():
@@ -85,7 +85,6 @@ class Product(object):
         results = []
         for key in Product.__redis.keys():
             if key != 'index':  # filer out our id index
-                print str(key) + ' ' + str(type(key))
                 data    = pickle.loads(Product.__redis.get(key))
                 product = Product(data['id']).deserialize(data)
                 results.append(product)

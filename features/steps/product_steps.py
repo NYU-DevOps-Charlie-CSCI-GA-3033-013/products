@@ -23,9 +23,10 @@ def step_impl(context, message):
 
 @given(u'the following products')
 def step_impl(context):
-    for row in context.table:
-        product = Product()
-        product.deserialize(row)
+    for row in context.table:#By default all data is in Unicode strings
+        product = Product(id            =    int(row['id']),  name =     row['name'], 
+                          category      =    row['category'], price =    int(row['price']), 
+                          discontinued  =    row['discontinued'] == u'True')
         product.save()
 
 @when(u'I visit "{url}"')
