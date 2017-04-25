@@ -7,7 +7,7 @@ Background:
     Given the server is started
     Given the following products
         | id | name                  | category             | discontinued | price |
-        |  1 | iPhone 7              | electronics          | False        | 800   |
+        |  1 | iPhone 7              | electronics          | True         | 800   |
         |  2 | ActiveCare Hair Dryer | bathroom appliances  | False        | 200   |
         |  3 | Apple MacBook Pro     | electronics          | False        | 2100  |
 
@@ -48,10 +48,14 @@ Scenario: Search for a product with category
         Then I should see "iPhone 7"
         And I should see "Apple MacBook Pro"
 
+Scenario: Search for a product with name
+    When I search "/products" with name "iPhone 7"
+        Then I should see "iPhone 7"
+        And I should not see "Apple MacBook Pro"
 
 Scenario: Search for a product with discontinued status
     When I search "/products" with discontinued "False"
-        Then I should see "iPhone 7"
+        Then I should not see "iPhone 7"
         And I should see "ActiveCare Hair Dryer"
         And I should see "Apple MacBook Pro"
         

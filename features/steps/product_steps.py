@@ -1,6 +1,7 @@
 from behave import *
 import json
 import server
+from models import Product
 
 @given(u'the server is started')
 def step_impl(context):
@@ -22,10 +23,11 @@ def step_impl(context, message):
 
 @given(u'the following products')
 def step_impl(context):
-    for row in context.table:
-        server.data_load({'id':int(row['id']), 'name':row['name'], 'category':row['category'], 
-                                            'discontinued': row.get('discontinued', False), 
-                                            'price': int(row['price'])})
+    for row in context.table:#By default all data is in Unicode strings
+        product = Product(id            =    int(row['id']),  name =     row['name'], 
+                          category      =    row['category'], price =    int(row['price']), 
+                          discontinued  =    row['discontinued'] == u'True')
+        product.save()
 
 @when(u'I visit "{url}"')
 def step_impl(context, url):
@@ -77,6 +79,12 @@ def step_imp(context, url, price):
 @when(u'I search "{url}" with category "{category}"')
 def step_imp(context, url, category):
     target_url = url + "?category="+ category 
+    context.resp = context.app.get(target_url)
+    assert context.resp.status_code == 200
+
+@when(u'I search "{url}" with name "{name}"')
+def step_imp(context, url, name):
+    target_url = url + "?name="+ name 
     context.resp = context.app.get(target_url)
     assert context.resp.status_code == 200
 
