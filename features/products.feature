@@ -30,7 +30,15 @@ Scenario: Update a product
 	    And I update "/products" with id "1"
 	    And I retrieve "/products" with id "1"
 	    Then I should see "phones"
-        
+
+Scenario: Delete a product
+	When I visit "/products"
+	Then I should see "iPhone 7"
+	And I should see "Apple MacBook Pro"
+	When I delete "/products" with id "3"
+	And I visit "/products"
+	Then I should see "iPhone 7"
+	And I should not see "Apple MacBook Pro"
 
 Scenario: Search for a product with price
     When I search "/products" with price "800"
