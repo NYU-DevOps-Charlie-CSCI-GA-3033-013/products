@@ -8,7 +8,6 @@ def step_impl(context):
  context.app = server.app.test_client()
  context.server = server
 
-
 @when(u'I visit the "home page"')
 def step_impl(context):
     context.resp = context.app.get('/')
@@ -35,6 +34,11 @@ def step_impl(context, url):
     assert context.resp.status_code == 200
 
 ##### CRUD FUNCTIONS #####
+@when(u'I post "{url}" with name "{name}", category "{category}", discontinued "{discontinued}", and price "{price}"')
+def step_impl(context, url, name, category, discontinued, price):    
+    post_data       = json.dumps({ "name" : name,  "category" : category, "discontinued": discontinued.lower() == "true",  "price" : int(price)})
+    context.resp    = context.app.post(url, data=post_data, content_type='application/json')
+    assert context.resp.status_code == 201
 
 @when(u'I delete "{url}" with id "{id}"')
 def step_impl(context, url, id):
@@ -60,7 +64,6 @@ def step_impl(context, url, id):
     target_url = url + '/' + id
     context.resp = context.app.put(target_url, data=context.resp.data, content_type='application/json')
     assert context.resp.status_code == 200
-
 
 ##### SEARCHING FOR PRODUCTS ######
 

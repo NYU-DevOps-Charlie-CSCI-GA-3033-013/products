@@ -23,6 +23,14 @@ Scenario: List all products
     	And I should see "ActiveCare Hair Dryer"
     	And I should see "Apple MacBook Pro"
 
+Scenario: Create a product
+	When I post "/products" with name "Blender", category "kitchen appliances", discontinued "false", and price "120"
+		Then I should see "Blender" 
+		And I should see "kitchen appliances"
+		And I should see "false"
+		And I should see "120"
+		When  I visit "/products"
+		Then I should see "Blender" 
 
 Scenario: Update a product
 	When I retrieve "/products" with id "1"
