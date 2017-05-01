@@ -29,7 +29,7 @@ In addition to the standard REST API calls (GET, PUT, POST, DELETE), the service
 `PUT /products/1/discontinue`
 2. Limit the result-set returned:
 `GET /products?limit=5`
-3. Query by attribute: 
+3. Query by attribute:
     * Query by price:  
         * `GET /products?min-price=10&max-price=20`
         * `GET /products?price=100`
@@ -114,3 +114,106 @@ In case you're Using Git Repos, do the following steps-
 
 
 
+# Creating docker container for the service using vagrant
+
+1. cd into the service directory
+2. type the command to install the vbguest plugin
+vagrant plugin install vagrant-vbguest
+3. Add the following to the vagrant file
+
+######################################################################
+  # Add Redis docker container
+######################################################################
+  config.vm.provision "shell", inline: <<-SHELL
+    # Prepare Redis data share
+    sudo mkdir -p /var/lib/redis/data
+    sudo chown vagrant:vagrant /var/lib/redis/data
+  SHELL
+
+  # Add Redis docker container
+  config.vm.provision "docker" do |d|
+    d.pull_images "redis:alpine"
+    d.run "redis:alpine",
+      args: "--restart=always -d --name redis -h redis -p 6379:6379 -v /var/lib/redis/data:/data"
+  end
+
+  # Add Docker compose
+  # Note: you need to install the vagrant-docker-compose or this will fail!
+  # vagrant plugin install vagrant-docker-compose
+  # config.vm.provision :docker_compose, yml: "/vagrant/docker-compose.yml", run: "always"
+  # config.vm.provision :docker_compose, yml: "/vagrant/docker-compose.yml", rebuild: true, run: "always"
+  config.vm.provision :docker_compose
+
+  # Install Docker Compose after Docker Engine
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    sudo pip install docker-compose
+    # Install the IBM Container plugin as vagrant
+    sudo -H -u vagrant bash -c "echo Y | cf install-plugin https://static-ice.ng.bluemix.net/ibm-containers-linux_x64"
+  SHELL
+
+4. vagrant up
+5. vagrant provision
+6. vagrant ssh
+7. cd /vagrant
+8. vi Dockerfile
+
+9. put the following contents into the Dockerfile.
+
+FROM alpine:3.3
+
+MAINTAINER NYU-Products
+
+# Install just the Python runtime (no dev)
+
+RUN apk add --update \
+python \
+py-pip \
+&& rm -rf /var/cache/apk/*
+
+ENV PORT 5000
+EXPOSE $PORT
+
+# Set up a working folder and install the pre-reqs
+WORKDIR /app
+ADD requirements.txt /app
+RUN pip install -r requirements.txt
+
+# Add the code as the last Docker layer because it changes the most
+ADD static /app/static
+ADD server.py /app
+
+# Run the service
+CMD [ "python", "server.py" ]
+
+10. docker build -t products .
+11. docker images
+You should now be able to see the image 'products' in the list of docker images.
+12. docker run --rm -p 5000:5000 products
+This will ask you to link the redis service.
+13. docker run --rm -p 5000:5000 --link redis products
+
+You now have a docker image for your service. This image can be pushed to Bluemix as follows:
+
+14. cf login
+15. cf ic login
+16. cf ic namespace set <namespace_name>
+17. cf ic init
+18. docker tag products registry.ng.bluemix.net/namespace_name/products
+This tags the image with the tag 'latest'.
+19. docker push registry.ng.bluemix.net/namespace_name/products
+This will push the image to Bluemix.
+20. In Bluemix, select apps and containers.
+21. select 'create container'.
+22. You should be able to see your image. If not, refresh/login-logout.
+
+This image can now be linked with your service on bluemix
+
+23. If you already have an existing service and want to link it, go to the containers and select your container directly, otherwise create a service first.
+24. Select scalable in group deployment option.
+25. Give the container group name.
+26. Select size 64 MB, 4 GB Storage (Pico) and 2 instances.
+27. Keep the host name as it is (which will be your container group name).
+28. Give the port name 5000 (or whichever your service will be running on).
+29. In advanced options, select the service name and then click add and create it.
+30. You can see the overview and connections of your container.
+31. Clicking on the application URL will take you to the service website.
