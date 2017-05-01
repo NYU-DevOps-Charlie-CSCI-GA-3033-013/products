@@ -87,22 +87,22 @@ def list_products():
         in: query
         description: the price of Product you are looking for
         required: false
-        type: string
+        type: integer
       - name: limit
         in: query
         description: the number of Product entries you want
         required: false
-        type: string
+        type: integer
       - name: min-price
         in: query
         description: the minimum price of Product you are looking for
         required: false
-        type: string
+        type: integer
       - name: max-price
         in: query
         description: the maximum price of Product entries you want
         required: false
-        type: string
+        type: integer
     responses:
       200:
         description: An array of Products
@@ -125,7 +125,7 @@ def list_products():
                   type: string
                   description: the product's price
                 discontinued:
-                  type: string
+                  type: boolean
                   description: the status of product
     """
     name = request.args.get('name')
@@ -199,10 +199,10 @@ def get_products(id):
               type: string
               description: the category of product
             price:
-              type: string
+              type: integer
               description: the product's price
             discontinued:
-              type: string
+              type: boolean
               description: the status of product
       404:
         description: Product not found
@@ -250,10 +250,10 @@ def create_products():
               type: string
               description: the category of product
             price:
-              type: string
+              type: integer
               description: price for the Product
             discontinued:
-              type: string
+              type: boolean
               description: the status of product
     responses:
       201:
@@ -271,10 +271,10 @@ def create_products():
               type: string
               description: the category of product
             price:
-              type: string
+              type: integer
               description: the product's price
             discontinued:
-              type: string
+              type: boolean
               description: the status of product
       400:
         description: Bad Request (the posted data was not valid)
@@ -324,10 +324,10 @@ def update_products(id):
               type: string
               description: the category of product
             price:
-              type: string
+              type: integer
               description: price of the Product
             discontinued:
-              type: string
+              type: boolean
               description: the status of product
     responses:
       200:
@@ -345,10 +345,10 @@ def update_products(id):
               type: string
               description: the category of product
             price:
-              type: string
+              type: integer
               description: the products's price
             discontinued:
-              type: string
+              type: boolean
               description: the status of product
       400:
         description: Bad Request (the posted data was not valid)
@@ -399,10 +399,10 @@ def discontinue_products(id):
               type: string
               description: the category of product
             price:
-              type: string
+              type: integer
               description: the product's price
             discontinued:
-              type: string
+              type: boolean
               description: the status of product
       404:
         description: Product not found
