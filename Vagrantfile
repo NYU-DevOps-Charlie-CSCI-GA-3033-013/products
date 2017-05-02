@@ -50,7 +50,7 @@ Vagrant.configure(2) do |config|
     # Make vi look nice
     echo "colorscheme desert" > ~/.vimrc
   SHELL
-  
+
   ######################################################################
   # Add Redis docker container
   ######################################################################
@@ -67,5 +67,18 @@ Vagrant.configure(2) do |config|
       args: "--restart=always -d --name redis -h redis -p 6379:6379 -v /var/lib/redis/data:/data"
   end
 
-end
+  # Add Docker compose
+  # Note: you need to install the vagrant-docker-compose or this will fail!
+  # vagrant plugin install vagrant-docker-compose
+  # config.vm.provision :docker_compose, yml: "/vagrant/docker-compose.yml", run: "always"
+  # config.vm.provision :docker_compose, yml: "/vagrant/docker-compose.yml", rebuild: true, run: "always"
+  config.vm.provision :docker_compose
 
+  # Install Docker Compose after Docker Engine
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    sudo pip install docker-compose
+    # Install the IBM Container plugin as vagrant
+    sudo -H -u vagrant bash -c "echo Y | cf install-plugin https://static-ice.ng.bluemix.net/ibm-containers-linux_x64"
+  SHELL
+
+end
