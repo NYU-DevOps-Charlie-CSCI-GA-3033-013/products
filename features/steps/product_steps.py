@@ -1,12 +1,12 @@
 from behave import *
 import json
 import server
+from models import Product
 
 @given(u'the server is started')
 def step_impl(context):
  context.app = server.app.test_client()
  context.server = server
-
 
 @when(u'I visit the "home page"')
 def step_impl(context):
@@ -22,10 +22,11 @@ def step_impl(context, message):
 
 @given(u'the following products')
 def step_impl(context):
-    for row in context.table:
-        server.data_load({'id':int(row['id']), 'name':row['name'], 'category':row['category'], 
-                                            'discontinued': row.get('discontinued', False), 
-                                            'price': int(row['price'])})
+    for row in context.table:#By default all data is in Unicode strings
+        product = Product(id            =    int(row['id']),  name =     row['name'], 
+                          category      =    row['category'], price =    int(row['price']), 
+                          discontinued  =    row['discontinued'] == u'True')
+        product.save()
 
 @when(u'I visit "{url}"')
 def step_impl(context, url):
@@ -33,6 +34,11 @@ def step_impl(context, url):
     assert context.resp.status_code == 200
 
 ##### CRUD FUNCTIONS #####
+@when(u'I post "{url}" with name "{name}", category "{category}", discontinued "{discontinued}", and price "{price}"')
+def step_impl(context, url, name, category, discontinued, price):    
+    post_data       = json.dumps({ "name" : name,  "category" : category, "discontinued": discontinued.lower() == "true",  "price" : int(price)})
+    context.resp    = context.app.post(url, data=post_data, content_type='application/json')
+    assert context.resp.status_code == 201
 
 @when(u'I delete "{url}" with id "{id}"')
 def step_impl(context, url, id):
@@ -59,7 +65,6 @@ def step_impl(context, url, id):
     context.resp = context.app.put(target_url, data=context.resp.data, content_type='application/json')
     assert context.resp.status_code == 200
 
-
 ##### SEARCHING FOR PRODUCTS ######
 
 @when(u'I search "{url}" with minprice "{minprice}" and maxprice "{maxprice}"')
@@ -77,6 +82,12 @@ def step_imp(context, url, price):
 @when(u'I search "{url}" with category "{category}"')
 def step_imp(context, url, category):
     target_url = url + "?category="+ category 
+    context.resp = context.app.get(target_url)
+    assert context.resp.status_code == 200
+
+@when(u'I search "{url}" with name "{name}"')
+def step_imp(context, url, name):
+    target_url = url + "?name="+ name 
     context.resp = context.app.get(target_url)
     assert context.resp.status_code == 200
 
