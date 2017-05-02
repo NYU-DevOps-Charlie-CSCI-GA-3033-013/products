@@ -122,7 +122,7 @@ def list_products():
                   type: string
                   description: the category of product
                 price:
-                  type: string
+                  type: integer
                   description: the product's price
                 discontinued:
                   type: boolean
