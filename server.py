@@ -7,6 +7,7 @@ from redis import Redis
 from redis.exceptions import ConnectionError
 from threading import Lock
 from flask import Flask, Response, request, json
+from flasgger import Swagger
 from models import Product
 
 # Create Flask application
@@ -20,6 +21,23 @@ HTTP_400_BAD_REQUEST    = 400
 HTTP_404_NOT_FOUND      = 404
 HTTP_409_CONFLICT       = 409
 
+
+# Configure Swagger before initilaizing it
+app.config['SWAGGER'] = {
+    "swagger_version": "2.0",
+    "specs": [
+        {
+            "version": "1.0.0",
+            "title": "DevOps Swagger Product App",
+            "description": "This is Product store server.",
+            "endpoint": 'v1_spec',
+            "route": '/v1/spec'
+        }
+    ]
+}
+
+# Initialize Swagger after configuring it
+Swagger(app)
 ######################################################################
 # ERROR Handling
 ######################################################################
@@ -47,36 +65,96 @@ def index():
 ######################################################################
 @app.route('/products', methods=['GET'])
 def list_products():
-    name            = request.args.get('name')
+    """
+    Retrieve a list of Products
+    This endpoint will return all Producst unless a query parameter is specificed
+    ---
+    tags:
+      - Products
+    description: The Products endpoint allows you to query Products
+    parameters:
+      - name: category
+        in: query
+        description: the category of Product you are looking for
+        required: false
+        type: string
+      - name: name
+        in: query
+        description: the name of Product you are looking for
+        required: false
+        type: string
+      - name: price
+        in: query
+        description: the price of Product you are looking for
+        required: false
+        type: integer
+      - name: limit
+        in: query
+        description: the number of Product entries you want
+        required: false
+        type: integer
+      - name: min-price
+        in: query
+        description: the minimum price of Product you are looking for
+        required: false
+        type: integer
+      - name: max-price
+        in: query
+        description: the maximum price of Product entries you want
+        required: false
+        type: integer
+    responses:
+      200:
+        description: An array of Products
+        schema:
+          type: array
+          items:
+            schema:
+              id: Product
+              properties:
+                id:
+                  type: integer
+                  description: unique id assigned internally by service
+                name:
+                  type: string
+                  description: the product's name
+                category:
+                  type: string
+                  description: the category of product
+                price:
+                  type: integer
+                  description: the product's price
+                discontinued:
+                  type: boolean
+                  description: the status of product
+    """
+    name = request.args.get('name')
     if name:
-        name        = name.lower()
-    category        = request.args.get('category')
+      name = name.lower()
+    category = request.args.get('category')
     if category:
-        category    = category.lower()
-    discontinued    = str2bool(request.args.get('discontinued'))
-    min_price       = request.args.get('min-price')
-    max_price       = request.args.get('max-price')
-    price           = request.args.get('price')
-    limit           = request.args.get('limit')
+      category = category.lower()
+    discontinued = str2bool(request.args.get('discontinued'))
+    min_price = request.args.get('min-price')
+    max_price = request.args.get('max-price')
+    price = request.args.get('price')
+    print 'price is',price
+    limit = request.args.get('limit')
     products        = []
     count           = 0
     cutoff          = 10
-    
     if (limit is not None and int(limit) >= 0):
-        cutoff = int(limit)
+       cutoff = int(limit)
     elif (limit is not None and int(limit) < 0):
-        return reply(products, HTTP_400_BAD_REQUEST)
-    
-    for product in Product.all():
-        #print str(product.id) + ', ' + product.name + ', ' + product.category + ', ' + str(product.price) + ', ' + str(product.discontinued) 
+       return reply(products, HTTP_400_BAD_REQUEST)
+    for product in Product.all(): 
         if(count == cutoff):
-            break
-        if matches_clause(name,         product.name.lower()) and\
-           matches_clause(category,     product.category.lower()) and\
-           matches_clause(discontinued, product.discontinued) and\
-           matches_price(min_price, max_price, price, product.price):
-            products.append(product)
-            count = count + 1
+           break
+        print name,product.name.lower(),category,product.category.lower(),discontinued, product.discontinued,min_price, max_price, price, product.price
+
+        if matches_clause(name,product.name.lower()) and matches_clause(category,product.category.lower()) and matches_clause(discontinued, product.discontinued) and matches_price(min_price, max_price, price, product.price):
+              products.append(product)
+              count = count + 1
     results = [product.serialize() for product in products]
     return reply(results, HTTP_200_OK)
 
@@ -84,15 +162,51 @@ def matches_clause(clause_value, item_value):
     return clause_value is None or clause_value == item_value
 
 def matches_price(min_price, max_price, price, value):
-    return ((min_price is None or int(min_price) <= value) and \
-           (max_price is None or int(max_price) >= value) and \
-           (price is None or int(price) == value))
+    return ((min_price is None or int(min_price) <= int(value)) and (max_price is None or int(max_price) >= int(value)) and (price is None or int(price) == int(value)))
 
 ######################################################################
 # RETRIEVE A product
 ######################################################################
 @app.route('/products/<int:id>', methods=['GET'])
 def get_products(id):
+    """
+    Retrieve a single Product
+    This endpoint will return a Product based on its id
+    ---
+    tags:
+      - Products
+    produces:
+      - application/json
+    parameters:
+      - name: id
+        in: path
+        description: ID of product to retrieve
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Product returned
+        schema:
+          id: Product
+          properties:
+            id:
+              type: integer
+              description: unique id assigned internally by service
+            name:
+              type: string
+              description: the product's name
+            category:
+              type: string
+              description: the category of product
+            price:
+              type: integer
+              description: the product's price
+            discontinued:
+              type: boolean
+              description: the status of product
+      404:
+        description: Product not found
+    """
     product = Product.find(id)
     if product:
         message = product.serialize()
@@ -107,6 +221,64 @@ def get_products(id):
 ######################################################################
 @app.route('/products', methods=['POST'])
 def create_products():
+    """
+    Creates a Product
+    This endpoint will create a Product based on the data in the body that is posted
+    ---
+    tags:
+      - Products
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          id: data
+          required:
+            - name
+            - category
+            - price
+            - discontinued
+          properties:
+            name:
+              type: string
+              description: name for the Product
+            category:
+              type: string
+              description: the category of product
+            price:
+              type: integer
+              description: price for the Product
+            discontinued:
+              type: boolean
+              description: the status of product
+    responses:
+      201:
+        description: Product created
+        schema:
+          id: Product
+          properties:
+            id:
+              type: integer
+              description: unique id assigned internally by service
+            name:
+              type: string
+              description: the products's name
+            category:
+              type: string
+              description: the category of product
+            price:
+              type: integer
+              description: the product's price
+            discontinued:
+              type: boolean
+              description: the status of product
+      400:
+        description: Bad Request (the posted data was not valid)
+    """
     data    = request.get_json()
     product = Product()
     product.deserialize(data)
@@ -119,6 +291,68 @@ def create_products():
 ######################################################################
 @app.route('/products/<int:id>', methods=['PUT'])
 def update_products(id):
+    """
+    Update a Product
+    This endpoint will update a Product based on the body that is posted
+    ---
+    tags:
+      - Products
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - name: id
+        in: path
+        description: ID of product to retrieve
+        type: integer
+        required: true
+      - in: body
+        name: body
+        schema:
+          id: data
+          required:
+            - name
+            - category
+            - price
+            - discontinued
+          properties:
+            name:
+              type: string
+              description: name for the Product
+            category:
+              type: string
+              description: the category of product
+            price:
+              type: integer
+              description: price of the Product
+            discontinued:
+              type: boolean
+              description: the status of product
+    responses:
+      200:
+        description: Product Updated
+        schema:
+          id: Product
+          properties:
+            id:
+              type: integer
+              description: unique id assigned internally by service
+            name:
+              type: string
+              description: the products's name
+            category:
+              type: string
+              description: the category of product
+            price:
+              type: integer
+              description: the products's price
+            discontinued:
+              type: boolean
+              description: the status of product
+      400:
+        description: Bad Request (the posted data was not valid)
+    """
     product     = Product.find(id)
     if product:
         product.deserialize(request.get_json())
@@ -135,6 +369,44 @@ def update_products(id):
 ######################################################################
 @app.route('/products/<int:id>/discontinue', methods=['PUT'])
 def discontinue_products(id):
+    """
+    Discontinue a single Product
+    This endpoint will discontinue a Product based on its id
+    ---
+    tags:
+      - Products
+    produces:
+      - application/json
+    parameters:
+      - name: id
+        in: path
+        description: ID of product to discontinue
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Product discontinued
+        schema:
+          id: Product
+          properties:
+            id:
+              type: integer
+              description: unique id assigned internally by service
+            name:
+              type: string
+              description: the product's name
+            category:
+              type: string
+              description: the category of product
+            price:
+              type: integer
+              description: the product's price
+            discontinued:
+              type: boolean
+              description: the status of product
+      404:
+        description: Product not found
+    """
     product     = Product.find(id)
     if product:
         product.discontinue()
@@ -151,6 +423,23 @@ def discontinue_products(id):
 ######################################################################
 @app.route('/products/<int:id>', methods=['DELETE'])
 def delete_products(id):
+    """
+    Delete a Product
+    This endpoint will delete a Product based on the id specified in the path
+    ---
+    tags:
+      - Products
+    description: Deletes a Product from the database
+    parameters:
+      - name: id
+        in: path
+        description: ID of product to delete
+        type: integer
+        required: true
+    responses:
+      204:
+        description: Product deleted
+    """
     product = Product.find(id)
     if product:
         product.delete()
